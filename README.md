@@ -1,2 +1,2 @@
-# imrot
+# mrot
 Image and volumetric data rotation
