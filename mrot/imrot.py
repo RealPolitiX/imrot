@@ -6,26 +6,40 @@
 from math import cos, sin, radians
 import numpy as np
 
-class Rotator:
+class Rotator(object):
     
     def __init__(self, img):
         self.img = img
-        self.nr, self.nc = np.shape(img)
-        self.rowind, self.colind = np.meshgrid(range(self.nr), range(self.nc))
-        self.rotimg = np.zeros((self.nr, self.nc))
-        
-    def _rotmatrix(self, angle_deg):
+        self.nrow, self.ncol = np.shape(img)
+        self.rotimg = img
+    
+    
+    @property
+    def indices(self):
+        return np.meshgrid(range(self.nrow), range(self.ncol))
+    
+    
+    @staticmethod
+    def rotmatrix(angle_deg):
         
         angle_rad = radians(angle_deg)
         rotationMatrix = np.array([[cos(angle_rad), -sin(angle_rad)],
                                    [sin(angle_rad), cos(angle_rad)]])
-        
         return rotationMatrix
     
-    def rotate(self, angle):
+    
+    def rotate(self, angle, origin=(0, 0)):
         
-        for r in range(self.nr):
-            for c in range(self.nc):
-                rotr, rotc = np.round(self._rotmatrix(angle).dot([r, c])).astype('int')
-                if rotr>=0 and rotr<self.nr and rotc>=0 and rotc<self.nc: 
-                    self.rotimg[rotr, rotc] = self.img[r, c]
+        rows, cols = self.indices
+        rows_shifted = rows - origin[0]
+        cols_shifted = cols - origin[1]
+        imgrotated = np.zeros(self.img.shape)
+        
+        for r, c, rsh, csh in np.nditer([rows, cols, rows_shifted, cols_shifted]):
+            rotr, rotc = np.round(self.rotmatrix(angle).dot([rsh, csh])).astype('int')
+            rotr = rotr + origin[0]
+            rotc = rotc + origin[1]
+            if rotr>=0 and rotr<self.nrow and rotc>=0 and rotc<self.ncol:
+                imgrotated[rotr, rotc] = self.img[r, c]
+        
+        self.rotimg = imgrotated
